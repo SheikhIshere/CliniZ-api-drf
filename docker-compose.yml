@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/SmartHospital:rw
+      - static_volume:/vol/static
+      - media_volume:/vol/media
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=SmartHospital.settings
+    restart: unless-stopped
+
+volumes:
+  static_volume:
+  media_volume:

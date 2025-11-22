@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Confirmation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            padding: 10px;
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        .email-card {
+            max-width: 100%;
+            background: #f9fbfd;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5e9;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 18px 15px;
+            text-align: center;
+        }
+        
+        .hospital-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .appointment-title {
+            font-size: 17px;
+            font-weight: 500;
+        }
+        
+        .content {
+            padding: 18px 15px;
+            background: #f9fbfd;
+        }
+        
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+        
+        .appointment-box {
+            background: #f0f7ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #1a73e8;
+        }
+        
+        .appointment-item {
+            margin-bottom: 8px;
+            display: flex;
+        }
+        
+        .label {
+            font-weight: 600;
+            color: #555;
+            width: 110px;
+            flex-shrink: 0;
+        }
+        
+        .meeting-section {
+            background: #e8f4ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #c2e0ff;
+        }
+        
+        .meeting-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .meeting-link {
+            display: block;
+            background: #1a73e8;
+            color: white !important; 
+            text-decoration: none;
+            padding: 14px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 12px 0;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .instructions {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .preparation-tips {
+            background: #fff8e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .tips-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #e65100;
+            font-size: 15px;
+        }
+        
+        .tips-list {
+            font-size: 14px;
+            color: #666;
+            padding-left: 18px;
+        }
+        
+        .tips-list li {
+            margin-bottom: 6px;
+        }
+        
+        .support-info {
+            font-size: 14px;
+            color: #555;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .footer {
+            background: #f1f3f4;
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* Mobile-specific optimizations */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+            
+            .header {
+                padding: 15px 12px;
+            }
+            
+            .hospital-name {
+                font-size: 18px;
+            }
+            
+            .appointment-title {
+                font-size: 16px;
+            }
+            
+            .content {
+                padding: 15px 12px;
+            }
+            
+            .appointment-item {
+                flex-direction: column;
+            }
+            
+            .label {
+                width: 100%;
+                margin-bottom: 2px;
+            }
+            
+            .meeting-link {
+                padding: 16px 15px;
+                font-size: 17px;
+            }
+        }
+        
+        /* Small phone optimization */
+        @media screen and (max-width: 360px) {
+            .header {
+                padding: 12px 10px;
+            }
+            
+            .content {
+                padding: 12px 10px;
+            }
+            
+            .appointment-box, .meeting-section, .preparation-tips {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-card">
+        <div class="header">
+            <div class="hospital-name">Smart Hospital</div>
+            <div class="appointment-title">Appointment Confirmed</div>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">Hello {{patient_name}},</p>
+            
+            <p>Your appointment has been successfully confirmed. We're looking forward to assisting you with your healthcare needs.</p>
+            
+            <div class="appointment-box">
+                <div class="appointment-item">
+                    <span class="label">Doctor:</span> Dr. {{doctor_name}}
+                </div>
+                <div class="appointment-item">
+                    <span class="label">Appointment Type:</span> {{appoinment_types}}
+                </div>
+                <div class="appointment-item">
+                    <span class="label">Status:</span> {{appoinment_status}}
+                </div>
+            </div>
+            
+            <div class="meeting-section">
+                <div class="meeting-title">Join Your Virtual Consultation</div>
+                <a href="{{meet_link}}" class="meeting-link">Join Meeting Now</a>
+                <p class="instructions">Please join the meeting as soon as possible. If you experience any issues with the link, please try refreshing the page.</p>
+            </div>
+                        
+            <div class="preparation-tips">
+                <div class="tips-title">For the Best Experience:</div>
+                <ul class="tips-list">
+                    <li>Join from a quiet, well-lit location</li>
+                    <li>Test your audio and video before the meeting</li>
+                    <li>Have your ID and any medical documents ready</li>
+                    <li>Use a stable internet connection</li>
+                </ul>
+            </div>
+            
+            <p style="font-size: 14px; color: #555;">We're committed to providing you with the best possible healthcare experience. Thank you for trusting Smart Hospital with your care.</p>
+            
+            <div class="support-info">
+                <strong>Need help?</strong> Contact our support team at support@smarthospital.com or call (123) 456-7890.
+            </div>
+        </div>
+        
+        <div class="footer">
+            Smart Hospital - Delivering Excellence in Healthcare
+        </div>
+    </div>
+</body>
+</html>
