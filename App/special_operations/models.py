@@ -40,9 +40,13 @@ class DoctorRegistration(BaseModel):
         return f"Doctor Registration - {self.registration_number}"
 
     def save(self, *args, **kwargs):
-        if self.activation_status == MigrateProfileStatus.ACCEPTED:
+        # Run migration logic BEFORE saving, but DO NOT delete patient yet
+        if self.activation_status == MigrateProfileStatus.ACCEPTED and self.patient_id:
+            # Prevent running migration multiple times
+            if Doctor.objects.filter(user=self.patient.user).exists():
+                return super().save(*args, **kwargs)
+
             user = self.patient.user
-            print(f'\n\n\n process request accepted \n\n\n')
 
             full_name = self.patient.full_name
             photo = getattr(self.patient, 'photo', None)
@@ -57,9 +61,11 @@ class DoctorRegistration(BaseModel):
             token = self.patient.token
             registration_number = self.registration_number
 
+            # Update user role
             user.role = 'doctor'
             user.save()
 
+            # Create Doctor profile
             doctor = Doctor.objects.create(
                 user=user,
                 full_name=full_name,
@@ -74,26 +80,12 @@ class DoctorRegistration(BaseModel):
                 address=address,
                 token=token,
                 registration_number=registration_number,
+                is_verified=True
             )
-            doctor.save()
 
-            patient = Patient.objects.filter(
-                user=user,
-                full_name=full_name,
-                photo=photo,
-                birthday=birthday,
-                gender=gender,
-                age=age,
-                blood_group=blood_group,
-                height=height,
-                weight=weight,
-                phone_number=phone_number,
-                address=address,
-            ).first()
-            patient.delete()
-
-            qualification = Qualification.objects.create(
-                doctor=Doctor.objects.get(user=user),
+            # Create Qualification for the doctor
+            Qualification.objects.create(
+                doctor=doctor,
                 title=self.degree,
                 institution=self.institution,
                 degree=self.degree,
@@ -102,15 +94,9 @@ class DoctorRegistration(BaseModel):
                 certificate_img=self.certificate_img,
                 verification_status='verified'
             )
-            qualification.save()
 
-        if self.activation_status == MigrateProfileStatus.REJECTED:
-            print('\n\n\n application rejected \n\n\n')
-            pass
-
+        # TODO: implement celery and make a schedule, after this migrations done the patient account will be deleted in next 24 hour ok
+        
+        # Save DoctorRegistration row first
         super().save(*args, **kwargs)
-
-
-
-
 
