@@ -1,24 +1,28 @@
-# Use slim Python 3.12 image
+# Base image
 FROM python:3.12-slim
 
-# Set working directory
+# Set work directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
+# Install system dependencies
+RUN apt-get update && apt-get install -y netcat-openbsd gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the project
-COPY . .
+# Copy project
+COPY App/ ./App/
 
-# Set working directory to where manage.py is located
+# Set workdir to App
 WORKDIR /app/App
 
-# Ensure static directories exist
+# Collect static files (optional)
 RUN mkdir -p static staticfiles
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Copy wait script
+COPY wait_for_db.sh /app/wait_for_db.sh
+RUN chmod +x /app/wait_for_db.sh
 
-# Run migrations and start the server at container runtime
-CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+# Default command
+CMD ["/app/wait_for_db.sh"]
