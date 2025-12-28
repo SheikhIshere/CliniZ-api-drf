@@ -227,14 +227,3 @@ For cloud migration: start with Docker Compose for CI/CD, then extract services 
 
 Licensed under an open-source license (add `LICENSE` file). Maintainer: `Maintainer Name` — contact via repo issues or maintainer email in `.env`.
 
----
-
-**Icon example (for README badges):**
-
-```js
-// example using react-icons in a docs site
-import { FaHospital } from 'react-icons/fa';
-// <FaHospital /> used as a small badge next to headings
-```
-
-**Assumptions & confidence:** Assumed endpoint behaviors and required payloads from the provided list; where method-level auth is ambiguous, standard conventions were applied. Confidence: **medium** — verify exact auth requirements and payload shapes from the API serializers/views.
