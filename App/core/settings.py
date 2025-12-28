@@ -35,7 +35,7 @@ SECRET_KEY = 'django-insecure-====3=lu2x*7sxn)qpvs4^mtc$##@k$=2^))g==hyrz_(sbccg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['cliniz-api-drf.onrender.com']
 
 
 # Application definition
