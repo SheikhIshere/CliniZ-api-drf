@@ -1,13 +1,7 @@
-version: '3.8'
-
 services:
   web:
     build: .
-    volumes:
-      - .:/app
-      - ./App:/app/App
+    env_file:
+      - App/.env
     ports:
       - "8000:8000"
-    environment:
-      - EMAIL_HOST_USER=${EMAIL_HOST_USER}  
-      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD} 
