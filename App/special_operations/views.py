@@ -12,7 +12,3 @@ from drf_spectacular.utils import extend_schema
 class DoctorRegistrationCreateView(generics.CreateAPIView):
     queryset = DoctorRegistration.objects.all()
     serializer_class = BecomeDoctorSerializer
-    
-    def perform_create(self, serializer):
-        serializer.save(patient=self.request.user)
-    

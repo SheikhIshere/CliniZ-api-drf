@@ -43,6 +43,8 @@ class BecomeDoctorSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+    
+
         user = self.context.get('request').user
         
         # Get the Patient instance associated with the user
@@ -52,3 +54,4 @@ class BecomeDoctorSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Patient profile not found for this user.")
         
         return DoctorRegistration.objects.create(patient=patient, **validated_data)
+
