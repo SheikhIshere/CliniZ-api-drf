@@ -55,5 +55,5 @@ class IsDoctor(BasePermission):
     """
     def has_permission(self, request, view):
         if request.method == 'POST':
-            return getattr(request.user, 'role', None) == 'doctor'
-        return True  # Allow other methods for doctors as well
+            return request.user.role == 'doctor'
+        return False  # Allow other methods for doctors as well
