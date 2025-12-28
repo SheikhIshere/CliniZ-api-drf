@@ -1,17 +1,18 @@
+# Use slim Python 3.12 image
 FROM python:3.12-slim
 
+# Set working directory
 WORKDIR /app
 
-# Copy requirements and install
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY App/ ./App
+# Copy the project
+COPY . .
 
-# Run migrations
-RUN python3 App/manage.py makemigrations && \
-    python3 App/manage.py migrate
+# Set working directory to where manage.py is located
+WORKDIR /app/App
 
-# Run server
-CMD ["python3", "App/manage.py", "runserver", "0.0.0.0:8000"]
+# Run migrations and start the server at container runtime
+CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
