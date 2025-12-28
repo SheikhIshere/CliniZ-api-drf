@@ -40,8 +40,15 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['cliniz-api-drf.onrender.com', 'localhost', '127.0.0.1']
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "https://cliniz-api-drf.onrender.com",
+]
 
+# CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://cliniz-api-drf.onrender.com",
+]
 
 # Application definition
 
