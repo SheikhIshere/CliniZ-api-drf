@@ -8,6 +8,12 @@ Minimal, API-first hospital management backend built with **Django + Django REST
 
 ---
 
+<p align="center">
+  <a href="https://cliniz-api-drf.onrender.com" target="_blank" style="background-color:#4CAF50;color:white;padding:10px 20px;text-align:center;text-decoration:none;display:inline-block;border-radius:6px;font-weight:bold;">
+    LIVE
+  </a>
+</p>
+
 ## Database design
 
 <img src="/planing/clinic-z.png" alt="Database diagram" style="display:block; margin:12px 0; max-width:100%;"/>
