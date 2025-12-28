@@ -3,5 +3,28 @@ services:
     build: .
     env_file:
       - App/.env
+    environment:
+      - DB_NAME=clinicz_db
+      - DB_USER=clinicz_user
+      - DB_PASSWORD=password
+      - DB_HOST=db
+      - DB_PORT=5432
     ports:
       - "8000:8000"
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8000
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: clinicz_db
+      POSTGRES_USER: clinicz_user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
