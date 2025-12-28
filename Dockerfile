@@ -1,19 +1,19 @@
 FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-WORKDIR /SmartHospital
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc libjpeg-dev zlib1g-dev libfreetype6-dev libwebp-dev libffi-dev \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
+# Copy requirements first for better caching
 COPY requirements.txt .
-RUN python -m pip install --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    python3 manage.py makemigrations && \
+    python3 manage.py migrate && \
+    echo "Migrations completed"
 
+# Copy the entire project
 COPY . .
 
-RUN mkdir -p /vol/static /vol/media
+# Set the working directory to where manage.py is actually located
+WORKDIR /app/App
 
-EXPOSE 8001
-
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --no-input --clear && gunicorn SmartHospital.wsgi:application --bind 0.0.0.0:8001 --workers 3"]
-
+# Run the server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

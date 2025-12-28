@@ -1,15 +1,31 @@
-__pycache__
+# Python cache
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
-venv/
+.python-version
+
+# Environment
 .env
-db.sqlite3
-/media
-/vol/static
-/static
-.git
-.gitignore
-.idea
-.vscode
-# end
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# SQLite database (if you want fresh one in container)
+# db.sqlite3
+
+.venv
