@@ -2,18 +2,16 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy requirements first for better caching
+# Copy requirements and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
-    python3 manage.py makemigrations && \
-    python3 manage.py migrate && \
-    echo "Migrations completed"
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project
-COPY . .
+# Copy project
+COPY App/ ./App
 
-# Set the working directory to where manage.py is actually located
-WORKDIR /app/App
+# Run migrations
+RUN python3 App/manage.py makemigrations && \
+    python3 App/manage.py migrate
 
-# Run the server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Run server
+CMD ["python3", "App/manage.py", "runserver", "0.0.0.0:8000"]
