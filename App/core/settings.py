@@ -36,18 +36,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-====3=lu2x*7sxn)qpvs4^mtc$##@k$=2^))g==hyrz_(sbccg'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['cliniz-api-drf.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['local','cliniz-api-drf.onrender.com', 'localhost', '127.0.0.1']
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
     "https://cliniz-api-drf.onrender.com",
+    "http://localhost:3000",
 ]
 
 # CSRF
 CSRF_TRUSTED_ORIGINS = [
     "https://cliniz-api-drf.onrender.com",
+    "http://localhost:3000",
 ]
 
 # Application definition
@@ -106,9 +108,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# cors for front-end developer
-CORS_ALLOW_ALL_ORIGINS = True
-
 
 ROOT_URLCONF = 'core.urls'
 
@@ -133,12 +132,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # DATABASES = {
 #     'default': {
@@ -151,7 +150,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 #     }
 # }
 
-DATABASES = {"default": dj_database_url.config(default=os.getenv("DATABASE_URL"))}
+# DATABASES = {"default": dj_database_url.config(default=os.getenv("DATABASE_URL"))}
 
 
 # Password validation
@@ -196,7 +195,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # to sent mail 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend" # for development
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

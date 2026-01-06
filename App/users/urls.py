@@ -43,8 +43,8 @@ urlpatterns = [
 
     # forget password
     path('forget-password/', ForgetPasswordRequestView.as_view(), name='forget-password'),
-    path('forget-password/otp/resend/', PasswordResetVerifyOTPView.as_view(), name='forget-password-otp-resend'),    
-    path('forget-password/otp/send/', PasswordResetVerifyOTPView.as_view(), name='forget-password-otp'),
+    path('forget-password/otp/resend/', ForgetPasswordRequestView.as_view(), name='forget-password-otp-resend'),    
+    path('forget-password/otp/verify/', PasswordResetVerifyOTPView.as_view(), name='forget-password-otp'),
     path('forget-password/confirm/', PasswordResetConfirmView.as_view(), name='forget-password-confirm'),
 
     # change password if logged in

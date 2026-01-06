@@ -18,7 +18,7 @@ from doctors.models import Review
 class ContactUsSerializer(ModelSerializer):
     class Meta:
         model = ContactUs
-        fields = '__all__'
+        fields = ['email', 'problem']
         extra_kwargs = {
             'problem': {'required': True, 'allow_blank': False}
         }

@@ -3,4 +3,4 @@ services:
     build: .
     env_file:
       - ./App/.env
-    command: python manage.py runserver 0.0.0.0:$PORT
+    command: python manage.py runserver 0.0.0.0:8000

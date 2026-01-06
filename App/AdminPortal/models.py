@@ -14,27 +14,27 @@ User = get_user_model()
 # Create your models here.
 
 class ContactUs(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    email = models.CharField(max_length=30, blank=True, null=True)
-    problem = models.TextField(blank=True, null=True)
+    name = models.CharField(max_length=30, default='Guest')    
+    email = models.EmailField(default='support@example.com')
+    subject = models.CharField(max_length=100, null=True, blank=True)
+    problem = models.CharField(max_length=1000)
 
     class Meta:
         verbose_name = 'Contact Us'
         verbose_name_plural = 'Contact Us'
 
     def __str__(self):
-        return self.user.full_name or self.user.email
+        return f"{self.first_name} {self.last_name}  {self.subject} "
 
 
 
 
 class ReportBug(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
+    email = models.EmailField()
     bug_type = models.CharField(max_length=50, choices=BugType.choices)
     bug_other = models.CharField(max_length=100, blank=True)
     issue = models.CharField(max_length=1000)
-    image = models.ImageField(upload_to='web_portal/bug_report/images', blank=True, null=True)
+    image = models.ImageField(upload_to='web_portal/bug_report/images')
 
     status = models.CharField(max_length=20, choices=BugReportStatus.choices, default=BugReportStatus.PENDING)
 

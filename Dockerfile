@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y netcat-openbsd gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y netcat-openbsd gcc libpq-dev && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
 COPY requirements.txt .
@@ -18,11 +18,16 @@ COPY App/ ./App/
 WORKDIR /app/App
 
 # Collect static files (optional)
-RUN mkdir -p static staticfiles
+# RUN mkdir -p static staticfiles
 
 # Copy wait script
-COPY wait_for_db.sh /app/wait_for_db.sh
-RUN chmod +x /app/wait_for_db.sh
+# COPY wait_for_db.sh /app/wait_for_db.sh
+# RUN chmod +x /app/wait_for_db.sh
 
 # Default command
-CMD ["/app/wait_for_db.sh"]
+
+# for production
+# CMD ["/app/wait_for_db.sh"] 
+
+# for development
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"] 

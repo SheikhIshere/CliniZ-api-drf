@@ -144,6 +144,9 @@ class ActivatingAccountView(generics.CreateAPIView):
 
             # creating patient Profile
             patient = Patient.objects.create(user=user)
+            # for debug
+            # patient, created = Patient.objects.get_or_create(user=user)
+
             return Response({
                 'user': {
                     "user_id": user.id,
@@ -295,9 +298,20 @@ here i am checking otp founded from login serializer
     tags=['User-Authentication'],
     description="Verify OTP for login to gain access and refresh tokens. Provide the OTP sent to your email."
 )
-class LoginOtpCheckView(ActivatingAccountView):
+class LoginOtpCheckView(generics.CreateAPIView):
     serializer_class = LoginOtpSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        # return JWT tokens only, no Patient creation
+        refresh = RefreshToken.for_user(request.user)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        }, status=200)
 
 """
 resend login otp again

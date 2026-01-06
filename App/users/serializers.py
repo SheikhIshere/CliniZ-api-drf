@@ -178,73 +178,40 @@ class LoginSerializer(serializers.Serializer):
         return self._user
 
 
-
-"""
-Login OTP Check serializer
-"""
 class LoginOtpSerializer(serializers.Serializer):
-    otp = serializers.CharField(required=True)
+    otp = serializers.CharField(required=True, max_length=6)
 
     def validate(self, attrs):
-        # getting otp value
-        user = self.context.get('request').user
+        req = self.context['request']
+        _user = req.user
+        try: 
+            user = User.objects.get(email=_user.email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"error": "User not found."})
+        given_otp = attrs['otp']
 
-        given_otp_via_user = attrs.get('otp')
+        otp_obj = Otp.objects.filter(user=user, otp=given_otp, is_expired=False).first()
 
-        actual_otp_of_user = Otp.objects.get(user=user, otp=given_otp_via_user, is_expired=False)
+        if not otp_obj:
+            raise serializers.ValidationError({"error": "Invalid OTP."})
 
-        try:
-            # trying to achieve the user, as in my recent edit i have added is_authenticated
-            user = self.context.get('request').user
+        if not user.is_verified:
+            raise serializers.ValidationError({"error": "Account is not verified."})
 
-            # trying to guess otp            
-            
-            # if otp is not found 
-            if not actual_otp_of_user:
-                raise serializers.ValidationError({
-                    "error":"Invalid otp."
-                })
+        if otp_obj.created_at + timezone.timedelta(minutes=5) < timezone.now():
+            otp_obj.is_expired = True
+            otp_obj.save()
+            Otp.objects.filter(user=user, is_expired=False).update(is_expired=True)
+            raise serializers.ValidationError({"error": "OTP is expired."})
 
-            # checking is user is verified or not
-            if not user.is_verified:
-                user.delete()
-                raise serializers.ValidationError({
-                    "error":"Account is not verified."
-                })
-            
-            # getting current time
-            current_time = timezone.now()
-            # otp expire checking
-            if actual_otp_of_user.created_at + timezone.timedelta(minutes=5) < current_time:
-                actual_otp_of_user.is_expired = True
-                actual_otp_of_user.save()
-                raise serializers.ValidationError({
-                    "error":"Otp is expired."
-                })
+        # success path
+        otp_obj.is_expired = True
+        otp_obj.save()
 
-            # if otp is correct
-            if actual_otp_of_user.otp == given_otp_via_user:
-                actual_otp_of_user.is_expired = True
-                actual_otp_of_user.save()
-                
-        except Otp.DoesNotExist:
-            actual_otp_of_user.attempt += 1
-            actual_otp_of_user.save()
-            if actual_otp_of_user.attempt >= 3:
-                actual_otp_of_user.is_expired = True
-                actual_otp_of_user.save()
-                raise serializers.ValidationError({
-                    "error":"Otp input reached it's limit."
-                })
-            
-            raise serializers.ValidationError({
-                "error":"Invalid otp."
-            })
+        return attrs
 
-        return attrs                
-
-    def create(self, validated_data):        
-        return self.context.get('request').user
+    def create(self, validated_data):
+        return self.context['request'].user
 
 
 """
@@ -350,7 +317,6 @@ class PasswordResetVerifyOTPSerializer(serializers.Serializer):
 """
 password reset - verify OTP serializer
 """
-
 class PasswordResetConfirmSerializer(serializers.Serializer):
 
     _user: User = None
@@ -362,13 +328,11 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     confirm_password = serializers.CharField(required=True) 
 
     def validate(self, attrs):
-        # getting all of the data that user provided
         email = attrs.get('email')
         otp = attrs.get('otp')
         new_password = attrs.get('new_password')
         confirm_password = attrs.get('confirm_password')
                 
-        # verifying otp
         try:            
             self._user = user = User.objects.get(email=email)
             self._otp = otp_obj = Otp.objects.filter(
@@ -377,47 +341,53 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
                 is_expired=False
             ).first()
 
-            # current time 
+            # FIX: Guard before accessing created_at
+            if not otp_obj:
+                raise serializers.ValidationError({
+                    "error": "Invalid or expired OTP."
+                })
+
+            # Now safe to use created_at
             current_time = timezone.now()
             expiry_time = otp_obj.created_at + timedelta(minutes=10)
+
             if current_time > expiry_time:
                 otp_obj.is_expired = True
                 otp_obj.save()
                 raise serializers.ValidationError({
-                    "error":"Otp is expired. Please request a new otp."
+                    "error": "Otp is expired. Please request a new otp."
                 })
 
-            # checking is old password and new password is same or not
             if user.check_password(new_password):
                 raise serializers.ValidationError({
-                    "error":"New password cannot be the same as the current password."
+                    "error": "New password cannot be the same as the current password."
                 })
             
-            # checking password match or not
             if new_password != confirm_password:
                 raise serializers.ValidationError({
-                    "error":"New password and confirm password must match."
+                    "error": "New password and confirm password must match."
                 })
 
             validate_password(new_password)
 
-
-        except (User.DoesNotExist, Otp.DoesNotExist):
+        except User.DoesNotExist:
             raise serializers.ValidationError({
-                "error":"Invalid request."
+                "error": "Invalid request."
             })
         
         return attrs
-
     
     def create(self, validated_data):
+        # Set new password
         self._user.set_password(validated_data.get('new_password'))
         self._user.save()
 
-        self._otp.is_expired = True
-        self._otp.save()
-        
-        # expiring all previous otp for this user
+        # Expire the verified OTP safely
+        if self._otp:
+            self._otp.is_expired = True
+            self._otp.save()
+
+        # Expire all other active OTPs for this user
         Otp.objects.filter(user=self._user, is_expired=False).update(is_expired=True)
 
         return self._user
