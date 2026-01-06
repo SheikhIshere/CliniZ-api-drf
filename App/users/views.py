@@ -414,10 +414,12 @@ password resetting
 )
 class PasswordResetConfirmView(APIView):
     serializer_class = PasswordResetConfirmSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response({
             'message': 'Password reset successful. You can now login with your new password.',
         }, status=status.HTTP_200_OK)
