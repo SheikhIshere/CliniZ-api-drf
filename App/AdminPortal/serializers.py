@@ -18,21 +18,8 @@ from doctors.models import Review
 class ContactUsSerializer(ModelSerializer):
     class Meta:
         model = ContactUs
-        fields = ['email', 'problem']
-        extra_kwargs = {
-            'problem': {'required': True, 'allow_blank': False}
-        }
-
-    def create(self, validated_data):
-        request = self.context.get('request')
-        user = getattr(request, 'user', None)
-
-        if user and user.is_authenticated:
-            validated_data['user'] = user
-            validated_data['email'] = user.email
-        # else: guest will manually pass email
-
-        return super().create(validated_data)
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at')
 
 
 class ServiceSerializer(ModelSerializer):
@@ -45,17 +32,6 @@ class ReportBugSerializer(ModelSerializer):
     class Meta:
         model = ReportBug
         fields = '__all__'
-
-    def create(self, validated_data):
-        request = self.context.get('request')
-        user = getattr(request, 'user', None)
-        
-        if user and user.is_authenticated:
-            validated_data['user'] = user
-            validated_data['email'] = user.email
-        # else: guest will manually pass email
-
-        return super().create(validated_data)
 
 
 class ReviewSerializerPublic(ModelSerializer):

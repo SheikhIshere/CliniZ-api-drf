@@ -12,7 +12,10 @@ from .models import (
     Appointments, 
     AppointmentImage
 )
+from doctors.models import Doctor
 
+# base import
+from BASE.base_choice import AppointmentStatus
 
 """
 patient will be able to add picture while creating appointment
@@ -29,18 +32,26 @@ patient will be creating a appointment with doctor
 """
 class PatientAppointmentSerializer(serializers.ModelSerializer):
     images = AppointmentImageSerializer(many=True, required=False)
+    doctor_email = serializers.EmailField(write_only=True)  # accept doctor's email in request
 
     class Meta:
         model = Appointments
-        exclude = ('status', 'meeting_link',)
-        read_only_fields = ('doctor', 'patient', 'created_at', 'updated_at')
+        exclude = ('status', 'meeting_link', 'patient', 'is_paid', 'doctor')
 
     def validate(self, attrs):
-        doctor = self.context.get('doctor')
         meeting_date = attrs.get('meeting_date')
         meeting_time = attrs.get('meeting_time')
         appointment_type = attrs.get('appointment_type')
 
+        # convert email to doctor instance
+        doctor_email = attrs.pop('doctor_email')
+        try:
+            doctor = Doctor.objects.get(user__email=doctor_email)
+        except Doctor.DoesNotExist:
+            raise serializers.ValidationError({"doctor_email": "No doctor found with this email."})
+        attrs['doctor'] = doctor  # now doctor instance is in attrs
+
+        # check if doctor is already booked
         if Appointments.objects.filter(
             doctor=doctor,
             meeting_date=meeting_date,
@@ -52,9 +63,9 @@ class PatientAppointmentSerializer(serializers.ModelSerializer):
                 "details": "Doctor is already booked for this time slot."
             })
 
-        # checking is token of patient sufficient
+        # checking token of patient
         patient = self.context['request'].user.patient
-        if patient.token < doctor.fee: 
+        if patient.token < doctor.fee:
             raise serializers.ValidationError({
                 "details": (
                     f"Booking failed due to insufficient tokens. "
@@ -68,26 +79,24 @@ class PatientAppointmentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         images_data = validated_data.pop('images', [])
-        doctor = self.context['doctor']
+        doctor = validated_data.pop('doctor')
         patient = self.context['request'].user.patient
 
-
-        # cutting token from patient
-        patient.token -= doctor.fee 
-
-        # adding token into doctor's account
+        # transfer tokens
+        patient.token -= doctor.fee
         doctor.token += doctor.fee
         doctor.save()
 
-        # creating appointment
+        # create appointment
         appointment = Appointments.objects.create(
             doctor=doctor,
             patient=patient,
             is_paid=True,
-            status='pending'
+            status=AppointmentStatus.PENDING,
             **validated_data
         )
-        
+
+        # create images
         for img in images_data:
             AppointmentImage.objects.create(appointment=appointment, **img)
 
@@ -100,12 +109,32 @@ from doctor aspect seeing his dashboard what type of meetings he got
 with patients - this serializer will show all appointments for a doctor
 """
 class DoctorAppointmentListSerializer(serializers.ModelSerializer):
-    patient_name = serializers.CharField(source='patient.user.full_name', read_only=True)
+    patient_name = serializers.CharField(source='patient.name', read_only=True)
     patient_photo = serializers.ImageField(source='patient.photo', read_only=True)
+
+    doctor_email = serializers.SerializerMethodField()
+    patient_email = serializers.SerializerMethodField()
+
+    def get_doctor_email(self, obj) -> str:
+        return obj.doctor.user.email
+
+    def get_patient_email(self, obj) -> str:
+        return obj.patient.user.email
 
     class Meta:
         model = Appointments
-        fields = ('patient_photo', 'patient_name', 'meeting_date', 'meeting_time', 'appointment_type', 'status', 'is_paid')
+        fields = (
+            'id',
+            'doctor_email', 
+            'patient_email', 
+            'patient_photo', 
+            'patient_name', 
+            'meeting_date', 
+            'meeting_time', 
+            'appointment_type', 
+            'status', 
+            'is_paid'
+        )
 
 
 
@@ -127,7 +156,17 @@ class AppointmentPatientDetailSerializer(serializers.ModelSerializer):
     blood_group = serializers.CharField(source='patient.blood_group', read_only=True)
     gender = serializers.CharField(source='patient.gender', read_only=True)
 
+    patient_photo = serializers.ImageField(source='patient.photo', read_only=True)
+
+    doctor_email = serializers.SerializerMethodField()
+    patient_email = serializers.SerializerMethodField()
     symptom_images = serializers.SerializerMethodField()
+
+    def get_doctor_email(self, obj) -> str:
+        return obj.doctor.user.email
+
+    def get_patient_email(self, obj) -> str:
+        return obj.patient.user.email
 
     def get_symptom_images(self, obj):
         images = obj.images.all()
@@ -136,6 +175,9 @@ class AppointmentPatientDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointments
         fields = (
+            'id',
+            'doctor_email',
+            'patient_email',
             'name', 
             'age', 
             'address', 
@@ -168,9 +210,9 @@ class DoctorAppointmentUpdateStatusSerializer(serializers.ModelSerializer):
         current_status = self.instance.status
 
         allowed_transitions = {
-            'PENDING': ['RUNNING'],
-            'RUNNING': ['COMPLETED'],
-            'COMPLETED': [],  # once completed, no further changes
+            'pending': ['running'],
+            'running': ['completed'],
+            'completed': [],
         }
 
         if current_status not in allowed_transitions:

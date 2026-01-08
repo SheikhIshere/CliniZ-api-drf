@@ -118,6 +118,7 @@ class Qualification(BaseModel):
         verbose_name_plural = "Doctor Qualifications"
 
 
+
 """
 review section for doctors
 """

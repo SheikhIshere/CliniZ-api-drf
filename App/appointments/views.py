@@ -14,17 +14,22 @@ from rest_framework.response import Response
 
 # model import
 from .models import Appointments
+from doctors.models import Doctor
 
 # serializers
 from .serializers import (
     PatientAppointmentSerializer,
     DoctorAppointmentListSerializer,
     AppointmentPatientDetailSerializer,
-    DoctorAppointmentUpdateStatusSerializer
+    DoctorAppointmentUpdateStatusSerializer,
 )
 
+# sending mail
+from django.core.mail import send_mail
+from django.conf import settings
+
 # custom permission
-from BASE.base_permissions import IsDoctor, IsVerifiedUser
+from BASE.base_permissions import IsDoctor, IsVerifiedUser, IsPatient
 
 # api documentation
 from drf_spectacular.utils import extend_schema
@@ -45,7 +50,7 @@ class PatientAppointmentViewSet(mixins.ListModelMixin,
                                 viewsets.GenericViewSet):
     queryset = Appointments.objects.all()
     serializer_class = PatientAppointmentSerializer
-    permission_classes = [IsAuthenticated, IsVerifiedUser]
+    permission_classes = [IsAuthenticated, IsVerifiedUser, IsPatient]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -74,7 +79,7 @@ doctor sees appointment list and details
     """,
 )
 class DoctorAppointmentViewSet( mixins.ListModelMixin,
-                                mixins.CreateModelMixin,
+                                mixins.RetrieveModelMixin,
                                 viewsets.GenericViewSet,
 ):
     queryset = Appointments.objects.all()
@@ -89,7 +94,7 @@ class DoctorAppointmentViewSet( mixins.ListModelMixin,
 
     def get_queryset(self):
         # doctor sees only their own appointments
-        return self.queryset.filter(doctor=self.request.user.doctor)
+        return self.queryset.filter(doctor=self.request.user.doctor).order_by('created_at')
 
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
@@ -111,7 +116,7 @@ class DoctorAppointmentViewSet( mixins.ListModelMixin,
 
             # send email to patient
             patient_email = appointment.patient.user.email
-            doctor_name = appointment.doctor.user.full_name()
+            doctor_name = appointment.doctor.full_name
             subject = f"Update on your appointment with Dr. {doctor_name}"
             message = f"Your appointment status is now: {new_status}."
             
@@ -122,7 +127,7 @@ class DoctorAppointmentViewSet( mixins.ListModelMixin,
             print(f"DEBUG: Sending email to {patient_email} with subject '{subject}'")
             print(f"DEBUG: Message: {message}")
 
-            # in future this will be handled by celery and message broker
+            #TODO: in future this will be handled by celery and message broker
             send_mail(
                 subject,
                 message,

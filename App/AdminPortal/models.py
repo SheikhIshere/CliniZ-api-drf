@@ -14,9 +14,9 @@ User = get_user_model()
 # Create your models here.
 
 class ContactUs(BaseModel):
-    name = models.CharField(max_length=30, default='Guest')    
-    email = models.EmailField(default='support@example.com')
-    subject = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=30)
+    email = models.EmailField()
+    subject = models.CharField(max_length=100)
     problem = models.CharField(max_length=1000)
 
     class Meta:
@@ -24,7 +24,7 @@ class ContactUs(BaseModel):
         verbose_name_plural = 'Contact Us'
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}  {self.subject} "
+        return f"{self.name}  {self.subject} "
 
 
 

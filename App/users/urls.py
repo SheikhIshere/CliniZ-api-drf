@@ -33,8 +33,8 @@ urlpatterns = [
     
     # user registration
     path('register/', UserRegistrationView.as_view(), name='user-register'),
-    path('account/activate/', ActivatingAccountView.as_view(), name='activate-account'),
-    path('account/activate/otp/resend/', ResendingOtpView.as_view(), name='resend-otp'),
+    path('register/activate/via-otp', ActivatingAccountView.as_view(), name='activate-account'),
+    path('register/activate/otp/resend/', ResendingOtpView.as_view(), name='resend-otp'),
     
     # user login
     path('login/', UserLoginView.as_view(), name='user-login'),
