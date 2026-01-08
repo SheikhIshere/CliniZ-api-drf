@@ -3,7 +3,7 @@ here i am defining custom permission
 """
 
 from rest_framework.permissions import BasePermission, SAFE_METHODS 
-
+from BASE.base_choice import Role
 
 """ 
 User who is verified only can access the resource.
@@ -29,7 +29,7 @@ class IsOwnerOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        return bool(request.user and obj.user == request.user)
+        return bool(request.user and getattr(obj, 'user', None) == request.user)
 
 
 """
@@ -45,15 +45,47 @@ class IsNotReviewingSelf(BasePermission):
         return True
 
 
+class IsMeDoctor(BasePermission):
+    """
+    Allow access only if the user is a doctor.
+    Works for all request methods.
+    """
+    def has_permission(self, request, view):
+        user = request.user
+
+        # Must be authenticated
+        if not user or not user.is_authenticated:
+            return False
+
+        # Only allow if user role is doctor
+        return user.role == Role.DOCTOR    
+    
+
+
 """
 checking is user who trying to do request is he doctor or not for 
 applying permission to add a certificate in his account
 """      
-class IsDoctor(BasePermission):
+class IsDoctor(IsMeDoctor): # FIX: cannot change soo much is doctor fast so just doing inherit
     """
     Allow access only if the user is a doctor.
     """
+    # def has_permission(self, request, view):
+    #     if request.method == 'POST':
+    #         return request.user.role == Role.DOCTOR
+    #     return False  # Allow other methods for doctors as well
+    
+
+class IsPatient(BasePermission):
+    """
+    Allow access only if the user is a patient.
+    """
     def has_permission(self, request, view):
-        if request.method == 'POST':
-            return request.user.role == 'doctor'
-        return False  # Allow other methods for doctors as well
+        user = request.user
+
+        # Must be authenticated
+        if not user or not user.is_authenticated:
+            return False
+
+        # Only allow if user role is patient
+        return user.role == Role.PATIENT

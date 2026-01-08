@@ -48,7 +48,7 @@ class Appointments(BaseModel):
         verbose_name_plural = "Appointments"
     
     def __str__(self):
-        return f"Dr. {self.doctor.user.get_full_name()} ↔ patient: {self.patient.user.get_full_name()} @ {self.meeting_time} - status: {self.status}"
+        return f"Dr. {self.doctor.full_name} ↔ patient: {self.patient.full_name} @ {self.meeting_time} - status: {self.status}"
 
 
 

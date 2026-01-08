@@ -11,6 +11,9 @@ from .models import (
     Qualification, 
     Review,
 )
+from BASE.base_choice import DoctorVerificationStatus
+
+
 
 """
 doctor serialization where we are passing see through fields
@@ -76,14 +79,39 @@ class AvailableTimeSerializer(serializers.ModelSerializer):
 
 
 """
-
-This is a review serializer for patient view
+this is a review serializer
 """
+from rest_framework import serializers
+from .models import Review
+from django.core.exceptions import ValidationError
+
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        exclude = ('doctor',)
-        read_only_fields = ('created_at',)
+        fields = '__all__'
+        read_only_fields = ('created_at', 'reviewer')
+
+    def validate(self, attrs):
+        request = self.context['request']
+        patient = getattr(request.user, 'patient', None)
+        doctor = attrs.get('doctor')
+
+        if not patient:
+            raise ValidationError({"warning": "Logged-in user must be a patient to submit a review."})
+
+        # Prevent reviewing self
+        if doctor.user == request.user:
+            raise ValidationError({"warning": "You cannot review yourself as a doctor."})
+        # Prevent duplicate review for the same doctor
+        if Review.objects.filter(reviewer=patient, doctor=doctor).exists():
+            raise ValidationError("You have already reviewed this doctor.")
+
+        return attrs
+
+    def create(self, validated_data):
+        # Automatically set the reviewer as the logged-in patient
+        validated_data['reviewer'] = self.context['request'].user.patient
+        return super().create(validated_data)
 
 
 """
@@ -136,7 +164,7 @@ class QualificationApplySerializer(serializers.ModelSerializer):
         doctor = self.context['request'].user.doctor
         qualification = Qualification.objects.create(
             doctor=doctor,
-            verification_status='PENDING',
+            verification_status=DoctorVerificationStatus.PENDING,
             **validated_data
         )
 

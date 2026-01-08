@@ -17,10 +17,11 @@ from BASE.base_permissions import (
     IsVerifiedUser, 
     IsOwnerOrReadOnly,
     IsNotReviewingSelf,
-    IsDoctor,
+    IsMeDoctor,
 )
 from BASE.base_pagination import BasePagination
 from BASE.base_views import BaseDoctorViewSet
+from BASE.base_choice import Role
 
 # models
 from .models import (
@@ -68,6 +69,9 @@ class DoctorsProfile(generics.RetrieveAPIView):
     serializer_class = DoctorSerializer
     lookup_field = 'user__email'
 
+    def get_queryset(self):
+        return Doctor.objects.filter(user__role=Role.DOCTOR)
+
 
 """
 retrieve update and delete own profile
@@ -75,7 +79,7 @@ retrieve update and delete own profile
 @extend_schema(tags=["Doctors"])
 class DoctorMeView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DoctorSerializer
-    permission_classes = [permissions.IsAuthenticated, IsVerifiedUser, IsOwnerOrReadOnly, IsDoctor]
+    permission_classes = [permissions.IsAuthenticated, IsVerifiedUser, IsOwnerOrReadOnly, IsMeDoctor,]
 
     def get_object(self):
         doctor_profile, _ = Doctor.objects.select_related('user').get_or_create(user=self.request.user)
@@ -104,25 +108,26 @@ class AvailableTimeViewSet(BaseDoctorViewSet):
     serializer_class = AvailableTimeSerializer
 
 
-"""
-doctor's available time to patient
-"""
-class AvailableTimeForSpecificDoctor(filters.BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        doctor_id = request.query_params.get('doctor_id')
-        if doctor_id:
-            return queryset.filter(doctor=doctor_id)
-        return queryset
+
+# """
+# doctor's available time to patient
+# """
+# class AvailableTimeForSpecificDoctor(filters.BaseFilterBackend):
+#     def filter_queryset(self, request, queryset, view):
+#         doctor_id = request.query_params.get('doctor_id')
+#         if doctor_id:
+#             return queryset.filter(doctor=doctor_id)
+#         return queryset
 
 
-"""
-available time for specific doctor
-"""
-@extend_schema(tags=["Available Time OF Doctor"])
-class AvailableTimeForPatientViewSet(BaseDoctorViewSet):
-    queryset = AvailableTime.objects.all()
-    serializer_class = AvailableTimeSerializer    
-    filter_backends = [AvailableTimeForSpecificDoctor]
+# """
+# available time for specific doctor
+# """
+# @extend_schema(tags=["Available Time OF Doctor"])
+# class AvailableTimeForPatientViewSet(BaseDoctorViewSet):
+#     queryset = AvailableTime.objects.all()
+#     serializer_class = AvailableTimeSerializer    
+#     filter_backends = [AvailableTimeForSpecificDoctor]
 
 
 """
@@ -147,27 +152,18 @@ class SpecializationViewSet(BaseDoctorViewSet):
 review of doctor by patient but not by self
 """
 @extend_schema(tags=["Review OF Doctor"])
-class ReviewViewSet(BaseDoctorViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [
+        permissions.IsAuthenticated, 
         IsVerifiedUser, 
         IsOwnerOrReadOnly, 
-        permissions.IsAuthenticated, 
         IsNotReviewingSelf
     ]
+    pagination_class = BasePagination
+
     
-    def perform_create(self, serializer):
-        patient = getattr(self.request.user, 'patient', None)
-        doctor_id = self.request.data.get('doctor')
-
-        # Prevent multiple reviews for same doctor by same patient
-        if Review.objects.filter(reviewer=patient, doctor_id=doctor_id).exists():
-            raise serializers.ValidationError("You have already reviewed this doctor.")
-
-        serializer.save(reviewer=patient)
-
-
 
 """
 apply for add qualification of doctor
@@ -175,7 +171,7 @@ apply for add qualification of doctor
 @extend_schema(tags=["Qualifications OF Doctor"])
 class QualificationApplyView(APIView):
     serializer_class = QualificationApplySerializer
-    permission_classes = [permissions.IsAuthenticated, IsVerifiedUser, IsDoctor]
+    permission_classes = [permissions.IsAuthenticated, IsVerifiedUser, IsMeDoctor]
 
     def post(self, request):
         serializer = self.serializer_class(
@@ -194,10 +190,29 @@ It returns all qualifications for the authenticated and verified users.
 thought no one can change it without admin him self
 """
 @extend_schema(tags=["Qualifications OF Doctor"])
-class DoctorQualificationsView(APIView):
+class DoctorQualificationsView(generics.ListAPIView):
+    queryset = Qualification.objects.all()
+    serializer_class = DoctorQualificationsSerializer
     permission_classes = [permissions.IsAuthenticated, IsVerifiedUser]
 
-    def get(self, request, doctor_id):
-        qs = Qualification.objects.filter(doctor_id=doctor_id, verification_status='APPROVED')
-        serializer = DoctorQualificationsSerializer(qs, many=True)
-        return Response(serializer.data)
+    def get_queryset(self):
+        from BASE.base_choice import DoctorVerificationStatus
+        from uuid import UUID
+
+        doctor_id = self.kwargs.get('doctor__id')
+        # doctor_id = UUID(doctor_id_str) 
+        return Qualification.objects.filter(doctor__id=doctor_id, verification_status=DoctorVerificationStatus.APPROVED)
+
+
+"""
+to retrieve the single 
+instance of a qualification
+"""
+@extend_schema(tags=["Qualifications OF Doctor"])
+class DoctorQualificationsSingleView(generics.RetrieveAPIView):
+    queryset = Qualification.objects.all()
+    serializer_class = DoctorQualificationsSerializer
+    permission_classes = [permissions.IsAuthenticated, IsVerifiedUser]
+
+
+

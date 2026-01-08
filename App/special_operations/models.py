@@ -30,8 +30,8 @@ class DoctorRegistration(BaseModel):
 
     class Meta:
         db_table = 'doctor_registration'
-        verbose_name = 'Profile Migration'
-        verbose_name_plural = 'Profile Migrations'
+        verbose_name = 'Profile Migration Application'
+        verbose_name_plural = 'Profile Migrations Applications'
 
     def __str__(self):
         return f"Doctor Registration - {self.registration_number}"
