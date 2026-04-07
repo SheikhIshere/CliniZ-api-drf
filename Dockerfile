@@ -14,7 +14,7 @@ COPY App/ ./App/
 WORKDIR /app/App
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8013
 
 # Run Django dev server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8013"]
