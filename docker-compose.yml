@@ -4,6 +4,29 @@ services:
   web:
     build: .
     env_file:
-      - ./App/.env
+      - ./.env
     ports:
       - "8013:8013"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-clinicz_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-clinicz_pass}
+      POSTGRES_DB: ${DB_NAME:-clinicz_db}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-clinicz_user} -d ${DB_NAME:-clinicz_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
