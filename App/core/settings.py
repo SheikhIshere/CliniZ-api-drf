@@ -38,19 +38,21 @@ SECRET_KEY = 'django-insecure-====3=lu2x*7sxn)qpvs4^mtc$##@k$=2^))g==hyrz_(sbccg
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['local','cliniz-api-drf.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['local','cliniz-api-drf.onrender.com', 'localhost', '127.0.0.1', 'api.clinic.nutcrackers.site'])
 
 # CORS
-CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
     "https://cliniz-api-drf.onrender.com",
     "http://localhost:3000",
-]
+    "https://api.clinic.nutcrackers.site"
+])
 
 # CSRF
-CSRF_TRUSTED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     "https://cliniz-api-drf.onrender.com",
     "http://localhost:3000",
-]
+    "https://api.clinic.nutcrackers.site"
+])
 
 # Application definition
 
